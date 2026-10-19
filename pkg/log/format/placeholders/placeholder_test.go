@@ -81,9 +81,19 @@ func TestParse(t *testing.T) {
 			expectCount: 1,
 		},
 		{
+			name:        "field_prefix_short_unit",
+			input:       "%prefix(path=short-unit)",
+			expectCount: 1,
+		},
+		{
 			name:        "field_tf_path",
 			input:       "%tf-path",
 			expectCount: 1,
+		},
+		{
+			name:      "field_tf_path_rejects_short_unit",
+			input:     "%tf-path(path=short-unit)",
+			expectErr: true,
 		},
 		{
 			name:        "field_tf_command_args",
