@@ -246,13 +246,15 @@ Specific options for placeholders:
 
 * `%prefix`
 
-  * `path=[relative|short-relative|short]`
+  * `path=[relative|short-relative|short|basename]`
 
     * `relative` - Outputs a relative path to the working directory.
 
     * `short-relative` - Outputs a relative path to the working directory, trims the leading slash `./` and hides the working directory path `.`
 
     * `short` - Outputs an absolute path, but hides the working directory path.
+
+    * `basename` - Outputs only the last element of the path.
 
 * `%tf-path`
 

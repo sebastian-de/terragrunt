@@ -33,7 +33,7 @@ func NewPlaceholderRegister() Placeholders {
 		Level(),
 		Message(),
 		Field(WorkDirKeyName, options.PathFormat(
-			options.NonePath, options.RelativePath, options.ShortRelativePath, options.ShortPath,
+			options.NonePath, options.RelativePath, options.ShortRelativePath, options.ShortPath, options.BasenamePath,
 		)),
 		Field(
 			TFPathKeyName,

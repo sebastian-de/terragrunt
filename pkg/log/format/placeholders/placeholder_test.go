@@ -81,9 +81,19 @@ func TestParse(t *testing.T) {
 			expectCount: 1,
 		},
 		{
+			name:        "field_prefix_basename",
+			input:       "%prefix(path=basename)",
+			expectCount: 1,
+		},
+		{
 			name:        "field_tf_path",
 			input:       "%tf-path",
 			expectCount: 1,
+		},
+		{
+			name:      "field_tf_path_rejects_basename",
+			input:     "%tf-path(path=basename)",
+			expectErr: true,
 		},
 		{
 			name:        "field_tf_command_args",
