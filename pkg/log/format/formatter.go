@@ -3,6 +3,7 @@ package format
 import (
 	"bytes"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/gruntwork-io/terragrunt/pkg/log/format/options"
@@ -14,6 +15,9 @@ var _ log.Formatter = new(Formatter)
 
 type Formatter struct {
 	relativePather *options.RelativePather
+	// pathLabels is set once a run has discovered its units, while other
+	// goroutines may already be logging.
+	pathLabels     atomic.Pointer[map[string]string]
 	baseDir        string
 	placeholders   placeholders.Placeholders
 	mu             sync.Mutex
@@ -44,6 +48,7 @@ func (formatter *Formatter) Format(entry *log.Entry) ([]byte, error) {
 		BaseDir:        formatter.baseDir,
 		DisabledColors: formatter.disabledColors,
 		RelativePather: formatter.relativePather,
+		PathLabels:     formatter.loadPathLabels(),
 	})
 	if err != nil {
 		return nil, err
@@ -74,6 +79,20 @@ func (formatter *Formatter) SetBaseDir(baseDir string) error {
 
 	formatter.relativePather = pather
 	formatter.baseDir = baseDir
+
+	return nil
+}
+
+// SetPathLabels sets the labels the `basename` path format shows in place of
+// the last element of the given absolute paths.
+func (formatter *Formatter) SetPathLabels(labels map[string]string) {
+	formatter.pathLabels.Store(&labels)
+}
+
+func (formatter *Formatter) loadPathLabels() map[string]string {
+	if labels := formatter.pathLabels.Load(); labels != nil {
+		return *labels
+	}
 
 	return nil
 }

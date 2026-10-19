@@ -74,6 +74,10 @@ func TestPathFormatOptionFormat(t *testing.T) {
 
 	withPather := &options.Data{RelativePather: pather, BaseDir: base}
 	withoutPather := &options.Data{BaseDir: base}
+	withPathLabels := &options.Data{BaseDir: base, PathLabels: map[string]string{
+		filepath.Join(base, "app-a", "db"): filepath.Join("app-a", "db"),
+		filepath.Join(base, "app-b", "db"): filepath.Join("app-b", "db"),
+	}}
 
 	tests := []struct {
 		data     *options.Data
@@ -165,6 +169,27 @@ func TestPathFormatOptionFormat(t *testing.T) {
 			data:     withoutPather,
 			value:    filepath.Join(".terragrunt-stack", "openebs", ".terragrunt-stack", "mayastor-diskpools"),
 			expected: "mayastor-diskpools",
+		},
+		{
+			name:     "basename_uses_label_for_abs_path",
+			format:   options.BasenamePath,
+			data:     withPathLabels,
+			value:    filepath.Join(base, "app-a", "db"),
+			expected: filepath.Join("app-a", "db"),
+		},
+		{
+			name:     "basename_uses_label_for_rel_path",
+			format:   options.BasenamePath,
+			data:     withPathLabels,
+			value:    filepath.Join("app-b", "db"),
+			expected: filepath.Join("app-b", "db"),
+		},
+		{
+			name:     "basename_keeps_last_element_of_unlabeled_path",
+			format:   options.BasenamePath,
+			data:     withPathLabels,
+			value:    filepath.Join(base, "app-c", "db"),
+			expected: "db",
 		},
 		{
 			name:     "filename",

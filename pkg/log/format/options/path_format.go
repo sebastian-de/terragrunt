@@ -60,11 +60,23 @@ func (option *PathFormatOption) Format(data *Data, val any) (any, error) {
 
 		return str, nil
 	case BasenamePath:
-		if str == "" || str == "." || str == data.BaseDir {
+		// The prefix is absolute or relative to the base dir depending on who
+		// logs it, so look the path up absolute.
+		path := str
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(data.BaseDir, path)
+		}
+
+		path = filepath.Clean(path)
+		if path == filepath.Clean(data.BaseDir) {
 			return "", nil
 		}
 
-		return filepath.Base(str), nil
+		if label, ok := data.PathLabels[path]; ok {
+			return label, nil
+		}
+
+		return filepath.Base(path), nil
 	case FilenamePath:
 		return filepath.Base(str), nil
 	case DirectoryPath:

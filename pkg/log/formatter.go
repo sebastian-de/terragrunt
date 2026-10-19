@@ -18,6 +18,9 @@ type Formatter interface {
 	DisabledOutput() bool
 	// SetBaseDir creates a set of relative paths that are used to convert full paths to relative ones.
 	SetBaseDir(baseDir string) error
+	// SetPathLabels sets the labels the `basename` path format shows in place of
+	// the last element of the given absolute paths.
+	SetPathLabels(labels map[string]string)
 	// DisableRelativePaths disables the conversion of absolute paths to relative ones.
 	DisableRelativePaths()
 	// SetFormat parses and sets log format.

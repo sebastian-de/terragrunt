@@ -254,7 +254,7 @@ Specific options for placeholders:
 
     * `short` - Outputs an absolute path, but hides the working directory path.
 
-    * `basename` - Outputs only the last element of the path.
+    * `basename` - Outputs only the last element of the path. When units in a run share a name, it adds parent directories until each one is unique, skipping `.terragrunt-stack` directories, e.g. `app-a/db` and `app-b/db`.
 
 * `%tf-path`
 

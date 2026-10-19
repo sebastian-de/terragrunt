@@ -1,12 +1,14 @@
 package format_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/gruntwork-io/terragrunt/pkg/log/format"
 	"github.com/gruntwork-io/terragrunt/pkg/log/format/options"
 	"github.com/gruntwork-io/terragrunt/pkg/log/format/placeholders"
+	"github.com/gruntwork-io/terragrunt/test/helpers/venvtest"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -236,4 +238,27 @@ func TestFormatterPlaceholderRegisterNames(t *testing.T) {
 	assert.Contains(t, names, "msg")
 	assert.Contains(t, names, "time")
 	assert.Contains(t, names, "interval")
+}
+
+// TestFormatterSetPathLabels checks the labels set on the formatter reach the
+// `basename` prefix.
+func TestFormatterSetPathLabels(t *testing.T) {
+	t.Parallel()
+
+	baseDir := venvtest.Root("/work/live")
+	unit := filepath.Join(baseDir, "app-a", "db")
+
+	fmtr := format.NewFormatter(nil)
+	fmtr.SetDisabledColors(true)
+	require.NoError(t, fmtr.SetCustomFormat("%prefix(path=basename)"))
+	require.NoError(t, fmtr.SetBaseDir(baseDir))
+	fmtr.SetPathLabels(map[string]string{unit: filepath.Join("app-a", "db")})
+
+	output, err := fmtr.Format(&log.Entry{
+		Entry:  logrus.NewEntry(logrus.New()),
+		Level:  log.InfoLevel,
+		Fields: log.Fields{placeholders.WorkDirKeyName: unit},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, filepath.Join("app-a", "db")+"\n", string(output))
 }
