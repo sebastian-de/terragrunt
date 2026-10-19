@@ -45,6 +45,9 @@ type Data struct {
 	RelativePather *RelativePather
 	PresetColorFn  func() ColorValue
 	BaseDir        string
+	// ColorKey, when set, is the text the gradient color is picked for in
+	// place of the displayed text.
+	ColorKey       string
 	DisabledColors bool
 }
 
@@ -91,6 +94,12 @@ func (opts Options) Merge(withOpts ...Option) Options {
 
 // Format returns the formatted value.
 func (opts Options) Format(data *Data, str any) (string, error) {
+	// An option may set the color key for the options after it, but it must
+	// not reach the next placeholder of the entry.
+	if data != nil {
+		defer func() { data.ColorKey = "" }()
+	}
+
 	var err error
 
 	for _, opt := range opts {

@@ -1,6 +1,7 @@
 package options
 
 import (
+	"cmp"
 	"fmt"
 	"maps"
 	"slices"
@@ -266,7 +267,7 @@ func (color *ColorOption) Format(data *Data, val any) (any, error) {
 	}
 
 	if value == GradientColor && color.gradientColor != nil {
-		value = color.gradientColor.Value(str)
+		value = color.gradientColor.Value(cmp.Or(data.ColorKey, str))
 	}
 
 	return colorize(value, str), nil

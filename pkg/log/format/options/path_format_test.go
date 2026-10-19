@@ -196,11 +196,38 @@ func TestPathFormatOptionFormat(t *testing.T) {
 			opt := options.PathFormat(tc.format)
 			assert.Equal(t, options.PathFormatOptionName, opt.Name())
 
-			out, err := opt.Format(tc.data, tc.value)
+			// short-unit sets the color key on data, so each subtest gets its own.
+			data := *tc.data
+
+			out, err := opt.Format(&data, tc.value)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, out)
 		})
 	}
+}
+
+// TestShortUnitPathColorKey checks short-unit keys the gradient color on the
+// unit's absolute path, and that other path formats leave the key unset.
+func TestShortUnitPathColorKey(t *testing.T) {
+	t.Parallel()
+
+	base := venvtest.Root("/work/app")
+	unit := filepath.Join(base, "stack", "db")
+
+	colorKey := func(format options.PathFormatValue, value string) string {
+		data := &options.Data{BaseDir: base}
+
+		_, err := options.PathFormat(format).Format(data, value)
+		require.NoError(t, err)
+
+		return data.ColorKey
+	}
+
+	assert.Equal(t, unit, colorKey(options.ShortUnitPath, unit))
+	assert.Equal(t, unit, colorKey(options.ShortUnitPath, filepath.Join("stack", "db")))
+	assert.Empty(t, colorKey(options.ShortUnitPath, base))
+	assert.Empty(t, colorKey(options.ShortPath, unit))
+	assert.Empty(t, colorKey(options.FilenamePath, unit))
 }
 
 // TestPathFormatAllowedValues checks a placeholder rejects path formats outside its allowed list.

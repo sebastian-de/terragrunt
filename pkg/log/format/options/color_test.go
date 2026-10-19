@@ -215,6 +215,18 @@ func TestColorOptionFormatGradient(t *testing.T) {
 	assert.Equal(t, "\x1b[38;5;66mwrapped\x1b[m", formatColor(t, opt, "wrapped"))
 }
 
+// TestColorOptionFormatGradientColorKey checks the gradient picks the color for the color key, not the displayed text.
+func TestColorOptionFormatGradientColorKey(t *testing.T) {
+	t.Parallel()
+
+	opt := options.Color(options.GradientColor)
+
+	first := formatColorWith(t, opt, &options.Data{ColorKey: "/live/a/db"}, "db")
+	assert.Equal(t, "\x1b[38;5;66mdb\x1b[m", first)
+	assert.Equal(t, "\x1b[38;5;67mdb\x1b[m", formatColorWith(t, opt, &options.Data{ColorKey: "/live/b/db"}, "db"))
+	assert.Equal(t, first, formatColorWith(t, opt, &options.Data{ColorKey: "/live/a/db"}, "db"))
+}
+
 func TestColorOptionParseValue(t *testing.T) {
 	t.Parallel()
 
@@ -334,7 +346,13 @@ func TestColorStyleColorFunc(t *testing.T) {
 func formatColor(t *testing.T, opt options.Option, value string) string {
 	t.Helper()
 
-	out, err := opt.Format(&options.Data{}, value)
+	return formatColorWith(t, opt, &options.Data{}, value)
+}
+
+func formatColorWith(t *testing.T, opt options.Option, data *options.Data, value string) string {
+	t.Helper()
+
+	out, err := opt.Format(data, value)
 	require.NoError(t, err)
 
 	str, ok := out.(string)

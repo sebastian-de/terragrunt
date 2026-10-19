@@ -60,11 +60,21 @@ func (option *PathFormatOption) Format(data *Data, val any) (any, error) {
 
 		return str, nil
 	case ShortUnitPath:
-		if str == "" || str == "." || str == data.BaseDir {
+		// The prefix is absolute or relative to the base dir depending on who
+		// logs it, so compare and color by the absolute path.
+		unitPath := str
+		if !filepath.IsAbs(unitPath) {
+			unitPath = filepath.Join(data.BaseDir, unitPath)
+		}
+
+		unitPath = filepath.Clean(unitPath)
+		if unitPath == filepath.Clean(data.BaseDir) {
 			return "", nil
 		}
 
-		return filepath.Base(str), nil
+		data.ColorKey = unitPath
+
+		return filepath.Base(unitPath), nil
 	case FilenamePath:
 		return filepath.Base(str), nil
 	case DirectoryPath:
