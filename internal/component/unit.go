@@ -23,6 +23,7 @@ type Unit struct {
 	discoveryContext *DiscoveryContext
 	path             string
 	configFile       string
+	logLabel         string // set once per run before units start; not guarded by mu
 	reading          []string
 	dependencies     Components
 	dependents       Components
@@ -106,6 +107,16 @@ func (u *Unit) ConfigFile() string {
 // SetConfigFile sets the discovered config filename for this unit.
 func (u *Unit) SetConfigFile(filename string) {
 	u.configFile = filename
+}
+
+// LogLabel returns the label the `minimal` log path format shows for this unit.
+func (u *Unit) LogLabel() string {
+	return u.logLabel
+}
+
+// SetLogLabel sets the label the `minimal` log path format shows for this unit.
+func (u *Unit) SetLogLabel(label string) {
+	u.logLabel = label
 }
 
 // Kind returns the kind of component (always Unit for Unit).

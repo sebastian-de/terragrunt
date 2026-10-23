@@ -19,6 +19,7 @@ import (
 	"github.com/gruntwork-io/terragrunt/internal/vexec"
 	"github.com/gruntwork-io/terragrunt/internal/vfs"
 	"github.com/gruntwork-io/terragrunt/pkg/config"
+	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/gruntwork-io/terragrunt/pkg/options"
 	thlogger "github.com/gruntwork-io/terragrunt/test/helpers/logger"
 	"github.com/gruntwork-io/terragrunt/test/helpers/venvtest"
@@ -55,6 +56,36 @@ func TestCloneUnitOptions_WithStackOpts(t *testing.T) {
 	assert.NotNil(t, logger)
 	assert.Equal(t, configPath, opts.OriginalTerragruntConfigPath)
 	assert.NotEmpty(t, opts.DownloadDir)
+}
+
+// TestCloneUnitOptions_MinimalPrefixShowsUnitLabel checks the unit's logger
+// carries its label, whatever the formatter's base dir is. In an MCP call with
+// a `working_dir`, the base dir is the launch dir, not the discovery dir.
+func TestCloneUnitOptions_MinimalPrefixShowsUnitLabel(t *testing.T) {
+	t.Parallel()
+
+	unitDir := filepath.Join(memRoot, "app-a", "db")
+
+	stackOpts, err := options.NewTerragruntOptionsForTest(filepath.Join(memRoot, "terragrunt.hcl"))
+	require.NoError(t, err)
+
+	unit := component.NewUnit(unitDir)
+	unit.SetDiscoveryContext(&component.DiscoveryContext{WorkingDir: memRoot})
+	unit.SetLogLabel(filepath.Join("app-a", "db"))
+
+	var out bytes.Buffer
+
+	l := thlogger.CreateLogger()
+	require.NoError(t, l.Formatter().SetCustomFormat("%prefix(path=minimal) %msg"))
+	require.NoError(t, l.Formatter().SetBaseDir(venvtest.Root("/launch")))
+	l.SetOptions(log.WithOutput(&out))
+
+	_, unitLogger, err := runner.CloneUnitOptions(stackOpts, unit, filepath.Join(unitDir, "terragrunt.hcl"), "", l)
+	require.NoError(t, err)
+
+	unitLogger.Info("hello")
+
+	assert.Equal(t, filepath.Join("app-a", "db")+" hello\n", out.String())
 }
 
 func TestBuildUnitOpts_BasicUnit(t *testing.T) {

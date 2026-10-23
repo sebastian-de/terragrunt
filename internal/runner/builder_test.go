@@ -430,6 +430,31 @@ func TestCheckUnitVersionConstraints_InvalidEngineMeta(t *testing.T) {
 	require.ErrorAs(t, err, &target)
 }
 
+// TestNewSetsLogLabels checks the `minimal` log path labels are attached when
+// the runner is built, unique among units sharing a last path element.
+func TestNewSetsLogLabels(t *testing.T) {
+	t.Parallel()
+
+	v := memVenv(tfVersionOutput)
+	writeUnit(t, v, memRoot, filepath.Join("app-a", "db"), "")
+	writeUnit(t, v, memRoot, filepath.Join("app-b", "db"), "")
+	writeUnit(t, v, memRoot, "vpc", "")
+
+	rnr, err := runner.New(
+		config.WithCaches(t.Context()),
+		thlogger.CreateLogger(),
+		v,
+		newStackOpts(t, memRoot, tf.CommandNamePlan),
+	)
+	require.NoError(t, err)
+
+	byPath := unitsByPath(rnr)
+	require.Len(t, byPath, 3)
+	assert.Equal(t, filepath.Join("app-a", "db"), byPath[filepath.Join(memRoot, "app-a", "db")].LogLabel())
+	assert.Equal(t, filepath.Join("app-b", "db"), byPath[filepath.Join(memRoot, "app-b", "db")].LogLabel())
+	assert.Equal(t, "vpc", byPath[filepath.Join(memRoot, "vpc")].LogLabel())
+}
+
 // engineBlock is an engine block for units whose commands must not spawn a local binary.
 const engineBlock = `engine {
   source = "github.com/example/engine"

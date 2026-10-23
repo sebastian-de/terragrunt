@@ -635,6 +635,44 @@ func TestTFLogWithRelPath(t *testing.T) {
 	}
 }
 
+// TestTFLogMinimalPath checks `%prefix(path=minimal)` prints the unit's label
+// instead of the whole path to it, with relative and absolute prefixes alike.
+// The two units share a last path element, so the label is the only thing that
+// can tell them apart; the bare element alone would print `db` on both.
+func TestTFLogMinimalPath(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name string
+		flag string
+	}{
+		{name: "relative", flag: ""},
+		{name: "absolute", flag: "--log-show-abs-paths"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			helpers.CleanupTerraformFolder(t, testFixtureLogMinimalPrefix)
+			tmpEnvPath := helpers.CopyEnvironment(t, testFixtureLogMinimalPrefix)
+			rootPath := filepath.Join(tmpEnvPath, testFixtureLogMinimalPrefix)
+
+			_, stderr, err := helpers.RunTerragruntCommandWithOutput(
+				t,
+				fmt.Sprintf(
+					"terragrunt run --all init --non-interactive --no-color %s --log-custom-format=%q --working-dir %s",
+					tc.flag,
+					"%prefix(path=minimal) %msg",
+					rootPath,
+				),
+			)
+			require.NoError(t, err)
+
+			assert.Regexp(t, `(?m)^app-a/db `, stderr)
+			assert.Regexp(t, `(?m)^app-b/db `, stderr)
+		})
+	}
+}
+
 func TestTFLogFormatPrettyOutput(t *testing.T) {
 	t.Parallel()
 

@@ -18,6 +18,7 @@ const (
 	ShortPath
 	FilenamePath
 	DirectoryPath
+	MinimalPath
 )
 
 var pathFormatList = NewMapValue(map[PathFormatValue]string{
@@ -26,6 +27,7 @@ var pathFormatList = NewMapValue(map[PathFormatValue]string{
 	ShortPath:         "short",
 	FilenamePath:      "filename",
 	DirectoryPath:     "dir",
+	MinimalPath:       "minimal",
 })
 
 type PathFormatValue byte
@@ -57,6 +59,24 @@ func (option *PathFormatOption) Format(data *Data, val any) (any, error) {
 		}
 
 		return str, nil
+	case MinimalPath:
+		// The prefix is absolute or relative to the base dir depending on who
+		// logs it.
+		path := filepath.Clean(str)
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(data.BaseDir, path)
+		}
+
+		if path == data.BaseDir {
+			return "", nil
+		}
+
+		if label, ok := data.Fields[UnitLabelKeyName].(UnitLabel); ok && label.Label != "" &&
+			(label.Prefix == str || label.Path == path) {
+			return label.Label, nil
+		}
+
+		return filepath.Base(path), nil
 	case FilenamePath:
 		return filepath.Base(str), nil
 	case DirectoryPath:

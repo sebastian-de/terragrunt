@@ -27,7 +27,11 @@ func New(
 		return nil, err
 	}
 
-	if err := checkVersionConstraints(ctx, l, v, opts, rnr.GetStack().Units); err != nil {
+	units := rnr.GetStack().Units
+
+	setLogLabels(resolveWorkingDir(opts), units)
+
+	if err := checkVersionConstraints(ctx, l, v, opts, units); err != nil {
 		return nil, err
 	}
 

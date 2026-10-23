@@ -65,6 +65,7 @@ const (
 	testFixtureLogFormatter                   = "fixtures/log/formatter"
 	testFixtureLogStdoutLevel                 = "fixtures/log/levels"
 	testFixtureLogRelPaths                    = "fixtures/log/rel-paths"
+	testFixtureLogMinimalPrefix               = "fixtures/log/minimal-prefix"
 	testFixtureMissingDependence              = "fixtures/missing-dependencies/main"
 	testFixtureModulePathError                = "fixtures/module-path-in-error"
 	testFixtureNoColor                        = "fixtures/no-color"

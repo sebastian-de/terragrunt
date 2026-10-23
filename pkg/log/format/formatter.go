@@ -2,6 +2,7 @@ package format
 
 import (
 	"bytes"
+	"path/filepath"
 	"sync"
 
 	"github.com/gruntwork-io/terragrunt/pkg/log"
@@ -73,7 +74,7 @@ func (formatter *Formatter) SetBaseDir(baseDir string) error {
 	}
 
 	formatter.relativePather = pather
-	formatter.baseDir = baseDir
+	formatter.baseDir = filepath.Clean(baseDir)
 
 	return nil
 }

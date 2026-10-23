@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/gruntwork-io/terragrunt/pkg/log/format/options"
 	"github.com/gruntwork-io/terragrunt/test/helpers/venvtest"
 
@@ -73,7 +74,14 @@ func TestPathFormatOptionFormat(t *testing.T) {
 	require.NoError(t, err)
 
 	withPather := &options.Data{RelativePather: pather, BaseDir: base}
-	withoutPather := &options.Data{BaseDir: base}
+	withoutPather := &options.Data{BaseDir: base, Entry: &log.Entry{}}
+	withUnitLabel := &options.Data{BaseDir: base, Entry: &log.Entry{Fields: log.Fields{
+		options.UnitLabelKeyName: options.UnitLabel{
+			Prefix: filepath.Join("app-a", "db"),
+			Path:   filepath.Join(base, "app-a", "db"),
+			Label:  filepath.Join("app-a", "db"),
+		},
+	}}}
 
 	tests := []struct {
 		data     *options.Data
@@ -137,6 +145,41 @@ func TestPathFormatOptionFormat(t *testing.T) {
 			data:     withoutPather,
 			value:    unit,
 			expected: unit,
+		},
+		{
+			name:     "minimal_current_dir_is_empty",
+			format:   options.MinimalPath,
+			data:     withoutPather,
+			value:    ".",
+			expected: "",
+		},
+		{
+			name:     "minimal_uses_label_of_prefix",
+			format:   options.MinimalPath,
+			data:     withUnitLabel,
+			value:    filepath.Join("app-a", "db"),
+			expected: filepath.Join("app-a", "db"),
+		},
+		{
+			name:     "minimal_uses_label_of_abs_path",
+			format:   options.MinimalPath,
+			data:     withUnitLabel,
+			value:    filepath.Join(base, "app-a", "db"),
+			expected: filepath.Join("app-a", "db"),
+		},
+		{
+			name:     "minimal_ignores_label_of_other_prefix",
+			format:   options.MinimalPath,
+			data:     withUnitLabel,
+			value:    filepath.Join(base, "app-b", "db"),
+			expected: "db",
+		},
+		{
+			name:     "minimal_without_label_keeps_last_element",
+			format:   options.MinimalPath,
+			data:     withoutPather,
+			value:    filepath.Join(base, "app-c", "db"),
+			expected: "db",
 		},
 		{
 			name:     "filename",

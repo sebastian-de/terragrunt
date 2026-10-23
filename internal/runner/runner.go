@@ -31,6 +31,7 @@ import (
 	"github.com/gruntwork-io/terragrunt/internal/view/dag"
 	"github.com/gruntwork-io/terragrunt/pkg/config"
 	"github.com/gruntwork-io/terragrunt/pkg/log"
+	logformat "github.com/gruntwork-io/terragrunt/pkg/log/format/options"
 	"github.com/gruntwork-io/terragrunt/pkg/log/format/placeholders"
 	"github.com/gruntwork-io/terragrunt/pkg/options"
 
@@ -66,9 +67,18 @@ func CloneUnitOptions(
 	}
 
 	// DisplayPath is relative to the discovery context, which keeps log prefixes short.
+	displayPath := unit.DisplayPath()
 	if !stackOpts.LogShowAbsPaths {
-		clonedLogger = clonedLogger.WithField(placeholders.WorkDirKeyName, unit.DisplayPath())
+		clonedLogger = clonedLogger.WithField(placeholders.WorkDirKeyName, displayPath)
 	}
+
+	// Attach the label regardless of how the prefix renders: with
+	// `--log-show-abs-paths` the prefix is the unit's absolute path instead.
+	clonedLogger = clonedLogger.WithField(logformat.UnitLabelKeyName, logformat.UnitLabel{
+		Prefix: displayPath,
+		Path:   clonedOpts.WorkingDir,
+		Label:  unit.LogLabel(),
+	})
 
 	// Use a per-unit default download directory when the stack is using its own default
 	// (i.e., no custom download dir was provided). This mirrors unit resolver behaviour
